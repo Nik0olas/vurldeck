@@ -17,6 +17,7 @@ let shouldCount
 let gameTimeCounter
 let currentGame
 let toggleKey
+let beforeOpenSteam = 0
 
 // Checks if "assets" folder is in /.config/vurldeck and if not, copy the "assets" folder from "resources".
 if (!fs.existsSync(`${configPath}/assets`)) {
@@ -58,7 +59,9 @@ if (require('electron-squirrel-startup')) {
 // Launches flatpak version of Lutris
 function launchLutris() {
   exec("flatpak run net.lutris.Lutris")
-  exec("steam")
+  if (beforeOpenSteam > 30) {
+    exec("steam")
+  }
 }
 
 // Gets saved game data from Lutris "pga.db" file.
@@ -421,10 +424,14 @@ setInterval(() => {
     }
   }
   // If is not in game and mainWindow is not hidden then start steam in background. This is done to fix bugs since steam is shutdown in "exitOverlayToggle" function.
-  if (!isInGame) {
-    if (!mainWindowIsHidden) {
-      exec("steam")
+  if (beforeOpenSteam > 30) {
+    if (!isInGame) {
+      if (!mainWindowIsHidden) {
+        exec("steam")
+      }
     }
+  } else {
+    beforeOpenSteam += 1
   }
 }, 1000);
 
