@@ -8,7 +8,7 @@ It brings features focused on ease of navigation and control, including:
 
 Vurldeck aims to make Desktop Mode a first-class experience on the Steam Deck.
 
-![Vurldeck Screenshot](https://github.com/Nik0olas/vurldeck/blob/b654ec69c17560f3812a9d96a0838c3685f3f834/screenshot/1.png)
+![Vurldeck Screenshot](https://github.com/Nik0olas/vurldeck/blob/0d815d8bd933e16d8f6fa81f2e615471c51a1429/screenshot/1.png)
 
 ---
 
