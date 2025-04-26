@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Game</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="blackscreen.css">
+    <link rel="stylesheet" id="cssfile">
+</head>
+<body>
+    <div id="dimscreen"></div>
+    
+   <div id="overlay">
+    <footer class="top-bar">
+        <button class="menu-btn" id="launchLutris" onclick="launchLutris()">Launch Lutris</button>
+        <button class="menu-btn" onclick="goToSettings()">⚙ Settings</button>
+        <button class="menu-btn" onclick="shutdownDeck()">⏻ Shutdown</button>
+      </footer>
+   </div>
+
+    <div class="container">
+        <img src="" id="gameImg" alt="Game Cover" class="game-img" />
+        
+        <div class="game-info">
+            <h1 id="gameName" class="game-name">Game</h1>
+            <h3 class="time-played" id="time-played">Time played: 0 hours 0 minutes</h3>
+            <button class="start-button" id="gameStartButton">Start Game</button>
+        </div>
+    </div>
+</body>
+</html>
+
+<script>
+    const { ipcRenderer } = require("electron")
+
+    let menuButtons = []
+    let gameCards = []
+    let currentGroup = 'games'
+    let currentIndex = 0
+    const game = localStorage.getItem("selectedGame") || "Unknown Game"
+
+    const switchAudio = new Audio("assets/switch.mp3")
+    const clickAudio = new Audio("assets/click.mp3")
+  
+    // Get all the elements you can scroll and click and put them in var.
+    function refreshFocusables() {
+        menuButtons = Array.from(document.querySelectorAll(".menu-btn"))
+        gameCards = Array.from(document.querySelectorAll(".start-button")) // Treat start-button as a game card
+    }
+
+    // Removes the hover effect when not needed.
+    function clearHover() {
+        [...menuButtons, ...gameCards].forEach(el => el.classList.remove("hover"))
+    }
+
+    // Updates where the selected element is.
+    function updateFocus() {
+        clearHover()
+        if (currentGroup === 'menu') {
+            if (menuButtons[currentIndex]) menuButtons[currentIndex].classList.add("hover")
+        } else {
+            if (gameCards[currentIndex]) gameCards[currentIndex].classList.add("hover")
+        }
+    }
+
+    // Moves selected element when user uses the arrow keys. Also checks if user presses Enter and if so, simulate a click.
+    function moveFocus(direction) {
+        let list = currentGroup === 'menu' ? menuButtons : gameCards
+
+        if (direction === 'right') {
+            if (currentIndex < list.length - 1) currentIndex++
+        } else if (direction === 'left') {
+            if (currentIndex > 0) currentIndex--
+        } else if (direction === 'down' && currentGroup === 'menu' && gameCards.length > 0) {
+            currentGroup = 'games'
+            currentIndex = 0
+        } else if (direction === 'up' && currentGroup === 'games' && menuButtons.length > 0) {
+            currentGroup = 'menu'
+            currentIndex = 0
+        }
+
+        updateFocus()
+        const cloneAudio = switchAudio.cloneNode()
+        cloneAudio.play()
+    }
+
+    window.addEventListener("keydown", (event) => {
+        switch (event.key) {
+            case "ArrowRight":
+                moveFocus("right")
+                break
+            case "ArrowLeft":
+                moveFocus("left")
+                break
+            case "ArrowDown":
+                moveFocus("down")
+                break
+            case "ArrowUp":
+                moveFocus("up")
+                break
+            case "Enter":
+                const list = currentGroup === 'menu' ? menuButtons : gameCards
+                if (list[currentIndex]) list[currentIndex].click()
+                const cloneAudio = clickAudio.cloneNode()
+                cloneAudio.play()
+                break
+        }
+    })
+
+    // Gets the amount of seconds that the user has played the game and transforms them into hours and minutes. Then it display them in "time-played" element.
+    function getTimePlayed() {
+        const totalSeconds = Number(localStorage.getItem(`${game}-timePlayed`)) || "Never Played"
+        if (totalSeconds != "Never Played") {
+            const hours = Math.floor(totalSeconds / 3600)
+            const minutes = Math.floor((totalSeconds % 3600) / 60)
+            document.getElementById("time-played").innerText = `Time Played: ${hours} Hours ${minutes} Minutes`
+        } else {
+            document.getElementById("time-played").innerText = `Never Played`
+        }
+    }
+
+    // Initialize focusables after everything is loaded
+    document.addEventListener("DOMContentLoaded", () => {
+        refreshFocusables()
+        updateFocus()
+        document.getElementById("cssfile").href = `${process.env.HOME}/.config/vurldeck/assets/game.css`
+        getTimePlayed()
+
+        setInterval(() => {
+        if (localStorage.getItem("music") == "true") {
+            ipcRenderer.send("should-play-music")
+        } else {
+            ipcRenderer.send("should-NOT-play-music")
+        }
+
+        getTimePlayed()
+        }, 1000)
+    })
+
+    setInterval(() => {
+        updateFocus()
+    }, 100)
+
+clickAudio.play()
+
+document.addEventListener("DOMContentLoaded", () => {
+    // Gets the name of the game and transforms them into lowercase and replaces spaces with "-" to find the img.
+    const imgName = game.toLowerCase().replaceAll(" ", "-")
+
+    // Uses "imgName" to display the img from the lutris coverart folder.
+    document.getElementById("gameName").innerText = game
+    const gameImg = document.getElementById("gameImg")
+    gameImg.src = `${process.env.HOME}/.var/app/net.lutris.Lutris/data/lutris/coverart/${imgName}.jpg`
+    gameImg.alt = game
+
+
+    // Dimming effect
+    const dimScreen = document.getElementById("dimscreen")
+    dimScreen.style.display = "block"
+    dimScreen.classList.add("dimscreenUnDim")
+
+    setTimeout(() => {
+        dimScreen.style.display = "none"
+        dimScreen.classList.remove("dimscreenUnDim")
+    }, 400)
+
+    // Start game button click
+    document.querySelector(".start-button").addEventListener("click", () => {
+        clickAudio.play()
+    })
+})
+
+// When toggle key is pressed play the dimming animation and go to index.html.
+ipcRenderer.on("escape-key-pressed", () => {
+    // Simulate the transition to a new page (for example)
+    document.getElementById("dimscreen").style.display = "block"
+    document.getElementById("dimscreen").classList.add("dimscreenDim")
+
+    setTimeout(() => {
+      window.location.replace("index.html")
+    }, 200)
+  }, 500)
+
+
+// Updates last played in gameHistory localStorage and then calls "start-game" to index.js.
+function startGame(gameName) {
+    let gameHistory = JSON.parse(localStorage.getItem("gameHistory")) || []
+
+    const currentTime = new Date().getTime()
+
+    let gameExists = false
+
+    for (let i = 0; i < gameHistory.length; i++) {
+        if (gameHistory[i].game === gameName) {
+            // If game exists, update the timestamp and break the loop
+            gameHistory[i].lastplayed = currentTime
+            gameExists = true
+            break
+        }
+    }
+
+    // If game does not exsist in gameHistory then create it.
+    if (!gameExists) {
+        gameHistory.push({
+            game: gameName,
+            lastplayed: currentTime
+        })
+    }
+
+    localStorage.setItem("gameHistory", JSON.stringify(gameHistory))
+
+    ipcRenderer.send("start-game", gameName)
+
+}
+
+// When "Start Game" button pressed, call function "startGame".
+document.getElementById("gameStartButton").addEventListener("click", () => {
+    startGame(game)
+})
+
+setInterval(() => {
+  ipcRenderer.send("save-game-history", localStorage.getItem("gameHistory"))
+}, 100)
+// Set wallpaper to users desktop wallpaper.
+ipcRenderer.on("set-wallpaper", (event, wallpaper) => {
+  document.body.style.background = `url('${wallpaper.trim()}') no-repeat center center fixed`
+  document.body.style.backgroundSize = "cover"
+})
+// Triggers index.js to send "set-wallpaper".
+ipcRenderer.send("get-wallpaper")
+
+  // Goes to settings on button press.
+  function goToSettings() {
+    window.location.replace('settings.html')
+  }
+
+  // Shutdown system.
+  function shutdownDeck() {
+    ipcRenderer.send("shutdown-deck")
+  }
+
+  // Recives game time data and saves it in localStorage.
+  ipcRenderer.on("send-game-time-data", (event, game, playTime) => {
+    let currentTime = Number(localStorage.getItem(`${game}-timePlayed`))
+
+    currentTime = currentTime + Number(playTime)
+
+    localStorage.setItem(`${game}-timePlayed`, JSON.stringify(currentTime))
+  })
+</script>

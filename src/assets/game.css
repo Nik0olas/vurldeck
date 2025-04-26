@@ -1,0 +1,183 @@
+#overlay {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 999; /* above other elements */
+    display: flex;
+    justify-content: center;
+}
+      /* General body styles */
+      body, html {
+          margin: 0;
+          padding: 0;
+          width: 100%;
+          height: 100%;
+          font-family: 'Orbitron', sans-serif;
+          background: linear-gradient(135deg, #1e1e2f, #0d0d14);
+          color: #fff;
+          height: 100vh;
+          overflow: hidden;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+      
+      }
+  
+  /* Fade-in animation */
+  @keyframes fadeIn {
+      from {
+          opacity: 0;
+          transform: translateY(20px);
+      }
+      to {
+          opacity: 1;
+          transform: translateY(0);
+      }
+  }
+  
+  /* Container holds image and info side-by-side */
+  .container {
+      display: flex;
+      align-items: center;
+      gap: 40px;
+      animation: fadeIn 1s ease-in-out;
+  }
+  
+  /* Game image styles */
+  .game-img {
+      width: 300px !important;
+      height: 420px !important;
+      object-fit: cover;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      transition: transform 0.3s ease;
+      margin-left: 10px;
+  }
+  
+  .game-img:hover {
+      transform: scale(1.03);
+  }
+  
+  /* Right-hand info panel */
+  .game-info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* centers vertically */
+    align-items: center; /* centers horizontally */
+    background-color: #2c2b2b;
+    padding: 10px;
+    border-radius: 8px;
+}
+
+  
+  /* Game name/title */
+  .game-name {
+      font-size: 2.5rem;
+      margin: 0 0 10px 0;
+      letter-spacing: 1px;
+      color: #f2f2f2;
+  }
+  
+  /* Time played */
+  .time-played {
+      font-size: 1rem;
+      color: #ccc;
+      margin-bottom: 30px;
+  }
+  
+  /* Start button */
+  .start-button {
+    background-color: #444;
+    color: #fff;
+    padding: 12px 24px;
+    font-size: 1rem;
+    border: 2px solid transparent; /* 👈 Add this */
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, border-color 0.3s ease; /* 👈 Optional smooth effect */
+    }
+  
+  .start-button:hover {
+      background-color: #666;
+  }
+  
+  /* Dimscreen for transition effect */
+  #dimscreen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 100%;
+      background-color: black;
+      opacity: 1;
+      z-index: 1000;
+      transition: opacity 0.4s ease;
+      pointer-events: none;
+  }
+  
+  .dimscreenUnDim {
+      opacity: 0;
+  }
+  
+  .top-bar {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    background-color: #2c2b2b;
+    width: 700px;
+    text-align: center;
+    border-radius: 100px;
+    font-size: 2rem;
+    font-weight: bold;
+    padding: 10px 0;
+    margin-top: 20px; /* optional spacing from top */
+}
+  
+  .menu-btn {
+    font-size: 1.2rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    padding: 12px 20px;
+    border-radius: 10px;
+    color: #fff;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+  }
+
+  .menu-btn:focus,
+.menu-btn.hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: #00aaff;
+  outline: none;
+}
+
+.start-button.hover,
+.start-button:focus {
+  transform: scale(1.05);
+  outline: none;
+  z-index: 10;
+  border-color: #00aaff;
+}
+
+.start-button.hover,
+.start-button:focus {
+  border-color: #00aaff;
+}
+
+.start-button.hover .game-info,
+.start-button:focus .game-info {
+  display: block;
+}
+
+.dimscreenDim {
+  animation: fadeToBlack 0.2s forwards;
+}
+
+@keyframes fadeToBlack {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
