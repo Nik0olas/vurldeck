@@ -15,6 +15,7 @@
     <footer class="top-bar">
         <button class="menu-btn" id="launchLutris" onclick="launchLutris()">Launch Lutris</button>
         <button class="menu-btn" onclick="goToSettings()">⚙ Settings</button>
+        <button class="menu-btn" onclick="returnToGameMode()">🎮 Return to game mode</button>
         <button class="menu-btn" onclick="shutdownDeck()">⏻ Shutdown</button>
       </footer>
    </div>
@@ -253,4 +254,9 @@ ipcRenderer.send("get-wallpaper")
   ipcRenderer.on("get-game-exit", () => {
     ipcRenderer.send("exit-game", localStorage.getItem("selectedGame"))
   })
+
+  // Sends out "launch-game-mode" on button press.
+  function returnToGameMode() {
+    ipcRenderer.send("launch-game-mode")
+  }
 </script>

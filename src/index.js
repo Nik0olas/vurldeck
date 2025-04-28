@@ -51,6 +51,18 @@ fs.readFile(`${configPath}/togglekey.txt`, "utf8", (err, data) => {
   }
 })
 
+fs.readFile(`${configPath}/tempGameMode.txt`, "utf8", (err, data) => {
+  if (!err) {
+    fs.unlink(`${configPath}/tempGameMode.txt`, (err) => {
+      if (err) {
+        console.log(err)
+      }
+    })
+
+    exec("steamos-session-select plasma-x11-persistent")
+  }
+})
+
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
   app.quit();
@@ -504,4 +516,26 @@ ipcMain.on("exit-game", (event, game) => {
   }
 
   exitOverlayToggle(foundRunner)
+})
+
+// Displays dialog asking user if they want to temporarily launch into Game Mode. If "yes" then it will write a file (tempGameMode.txt) into /.config/vurldeck
+// That file will later be used to detect if the user was in game mode. And if so then it will enable "Start in Desktop Mode instead of Game mode" again.
+ipcMain.on("launch-game-mode", () => {
+  const response = dialog.showMessageBoxSync(mainWindow, {
+    type: 'question',
+    buttons: ['Yes', 'No'],
+    title: 'Temporarily launch into game mode?',
+    message: 'Are you sure you want to temporarily launch into Game Mode? \n\nThis should only be used if you selected "Start Steam Deck in desktop mode instead of Game Mode" in the Vurldeck setup. Using this without that setting may cause issues. \n\nThis will temporarily disable "Start in desktop mode," but it will be re-enabled when you switch back to desktop mode.'  
+  })
+
+  if (response == 0) {
+    fs.writeFile(`${configPath}/tempGameMode.txt`, "true", (err) => {
+      if (err) {
+        console.log(err)
+      }
+    })
+    exec("steamos-session-select gamescope")
+  } else {
+    return
+  }
 })
