@@ -265,4 +265,8 @@
     localStorage.setItem(`${game}-timePlayed`, JSON.stringify(currentTime))
   })
 
+  // When recived send back "exit-game" with the current game name.
+  ipcRenderer.on("get-game-exit", () => {
+    ipcRenderer.send("exit-game", localStorage.getItem("selectedGame"))
+  })
   </script>

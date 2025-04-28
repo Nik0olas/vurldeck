@@ -104,6 +104,11 @@
             window.location.replace("index.html")
         })
 
+        // When recived send back "exit-game" with the current game name.
+        ipcRenderer.on("get-game-exit", () => {
+            ipcRenderer.send("exit-game", localStorage.getItem("selectedGame"))
+        })
+
         window.addEventListener('DOMContentLoaded', () => {
             const musicToggle = document.getElementById('musicToggle')
 

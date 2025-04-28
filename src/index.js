@@ -69,34 +69,44 @@ function getLutrisGameData() {
   const db = new Database(`${process.env.HOME}/.var/app/net.lutris.Lutris/data/lutris/pga.db`);
   let gameArray = []
 
-  const stmt = db.prepare('SELECT id, name, slug FROM games');
-  const games = stmt.all();
+  const stmt = db.prepare('SELECT id, name, slug, runner FROM games')
+  const games = stmt.all()
 
   games.forEach(game => {
-      gameArray.push({ id: game.id, name: game.name, slug: game.slug})
+      gameArray.push({ id: game.id, name: game.name, slug: game.slug, runner: game.runner})
   });
 
   return gameArray
 }
 
 // When toggle key is pressed while in game, show exit confirmation dialog. If yes then 
-function exitOverlayToggle(bool) {
-  if (bool) {
-    const response = dialog.showMessageBoxSync(mainWindow, {
+function exitOverlayToggle(runner) {
+  let response
+
+  function displayDialog(message) {
+    response = dialog.showMessageBoxSync(mainWindow, {
       type: 'question',
       buttons: ['Yes', 'No'],
       title: 'Exit game?',
-      message: 'Do you want to exit the game?'
+      message: message
     })
+  }
+  
+  if (runner == "steam") {
+    displayDialog('Do you want to exit the game? \n\nSince you are playing a Steam game, on exit Steam will have to reboot.')
+  } else {
+    displayDialog('Do you want to exit the game?')
+  }
 
-    if (response == 0) {
-      // Kills Lutris. Command is advanced because it needs to find the sandboxed instance to kill.
-      exec("ps aux | grep '[b]wrap.*lutris-wrapper' | awk '{print $2}' | xargs -r kill -9")
-      // And this kills steam so that steam games get shut down. Steam will launch again when user is in Vurldeck.
-      exec("pkill -f steam")
-    } else {
-      return
+  if (response == 0) {
+    // Kills Lutris. Command is advanced because it needs to find the sandboxed instance to kill.
+    exec("ps aux | grep '[b]wrap.*lutris-wrapper' | awk '{print $2}' | xargs -r kill -9")
+    // And this kills steam so that steam games get shut down. Steam will launch again when user is in Vurldeck.
+    if (runner == "steam") {
+      exec("pkill -15 steam")
     }
+  } else {
+    return
   }
 }
 
@@ -283,9 +293,11 @@ app.whenReady().then(() => {
     // Registers the key.
     globalShortcut.register(toggleKey, (event) => {
       if (!gameIsOpen) {
+        // Sends "escape-key-pressed" so that mainWindow can handle what to do next.
         mainWindow.webContents.send("escape-key-pressed")
       } else {
-        exitOverlayToggle(true)
+        // Sends to mainWindow so that mainWindow will response with current game name.
+        mainWindow.webContents.send("get-game-exit")
       }
     });
   })
@@ -477,4 +489,19 @@ ipcMain.on("uninstall-vurldeck", async () => {
 
   // Makes Steam Deck start in game mode by default.
   exec("steamos-session-select gamescope")
+})
+
+// Recives the name and finds the runner that the game is using and then calls "exitOverlayToggle".
+ipcMain.on("exit-game", (event, game) => {
+  const lutrisGames = getLutrisGameData();
+  let foundRunner
+
+  for (let i = 0; i < lutrisGames.length; i++) {
+    if (game == lutrisGames[i].name) {
+      foundRunner = lutrisGames[i].runner
+      break
+    }
+  }
+
+  exitOverlayToggle(foundRunner)
 })
